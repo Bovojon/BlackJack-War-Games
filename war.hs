@@ -20,7 +20,13 @@ isGreaterCard :: PlayingCards -> PlayingCards -> Bool
 isGreaterCard card1 card2
     | card1 > card2  = True
     | otherwise      = False
-    
+
+pop :: [a] -> [a]  -- return a tuple containing the popped element and the new stack
+pop [] = error "Can't pop from an empty stack!"
+pop ((:) x stack) = stack
+
+insert :: a -> [a] -> [a]
+insert a list_a = list_a ++ [a]
 --------------------------------------------------------------------------------------------------------
 
 type Deck = [PlayingCards]
@@ -42,13 +48,15 @@ splitShuffle deck = shuffle deck1 deck2
 
 shuffleDeck :: Deck -> Deck
 shuffleDeck deck = do
-    n <- randomRIO(3,8) :: IO Int
-    d <- (iterate splitShuffle deck) !! (fromIntegral n)
+    -- n <- randomRIO(3,8) :: IO Int
+    d <- (iterate splitShuffle deck) !! (4)
     return d
 
 dealCards :: Deck -> (Player, Player)
 dealCards deck = ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
-      
 
-
-
+compare :: Player -> Player -> Player
+compare playerA playerB =
+  if (head playerA) `isGreaterCard` (head playerB)
+    then insert (head playerA) playerB and pop playerA
+    else if (head playerA) `isSameCard` (head playerB) then
