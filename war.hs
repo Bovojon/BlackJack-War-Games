@@ -20,13 +20,6 @@ isGreaterCard :: PlayingCards -> PlayingCards -> Bool
 isGreaterCard card1 card2
     | card1 > card2  = True
     | otherwise      = False
-
-pop :: [a] -> [a]  -- return a tuple containing the popped element and the new stack
-pop [] = error "Can't pop from an empty stack!"
-pop ((:) x stack) = stack
-
-insert :: a -> [a] -> [a]
-insert a list_a = list_a ++ [a]
 --------------------------------------------------------------------------------------------------------
 
 type Deck = [PlayingCards]
@@ -55,8 +48,24 @@ shuffleDeck deck = do
 dealCards :: Deck -> (Player, Player)
 dealCards deck = ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
 
-compare :: Player -> Player -> Player
-compare playerA playerB =
-  if (head playerA) `isGreaterCard` (head playerB)
-    then insert (head playerA) playerB and pop playerA
-    else if (head playerA) `isSameCard` (head playerB) then
+--------------------------------------------------------------------------------------------------------
+
+winner :: Deck -> Deck -> Deck
+winner cardsA cardsB
+  | length cardsA == 0 = cardsB
+  | length cardsB == 0 = cardsA
+
+pop :: [a] -> [a]
+pop ((:) x xs) = xs
+
+insert :: a -> [a] -> [a]
+insert a list_a = list_a ++ [a]
+
+removeThreeAdd :: Deck -> Deck
+removeThreeAdd cards = [cards !! n | n <- [3..(length cards)]] ++ [cards !! n | n <- [0..3]]
+
+goToWar :: Deck -> Deck -> Deck
+goToWar cardsA cardsB
+  | (||) (length cardsA == 0) (length cardsB == 0) = winner cardsA cardsB
+  | (head cardsA) `isGreaterCard` (head cardsB) = goToWar (insert (head cardsA) cardsB) (pop cardsA)
+  | (head cardsA) `isSameCard` (head cardsB) = goToWar (removeThreeAdd cardsA) (removeThreeAdd cardsB)
