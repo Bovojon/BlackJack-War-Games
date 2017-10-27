@@ -5,6 +5,8 @@ data Suit = Clubs | Diamonds | Hearts | Spades deriving (Read, Enum, Eq, Show, O
 
 data PlayingCards = Card Number Suit deriving (Read, Eq, Show, Ord)
 
+data Roundwinner = Player1 | Player2 | Tie
+
 -- function to show card
 showCard :: PlayingCards -> String
 showCard (Card n s) = show n ++ " -- " ++ show s
@@ -20,52 +22,43 @@ isGreaterCard :: PlayingCards -> PlayingCards -> Bool
 isGreaterCard card1 card2
     | card1 > card2  = True
     | otherwise      = False
+
+-- function to take the top card
+popCard :: Player -> PlayingCards
+popCard player = head player
 --------------------------------------------------------------------------------------------------------
 
 type Deck = [PlayingCards]
 type Player = [PlayingCards]
 
 newDeck :: Deck
-newDeck = [Card x y|  y <- [Clubs .. Spades],x <- [Two .. Ace]]
+newDeck = [Card x y|  y <- [Clubs .. Spades], x <- [Two .. Ace]]
 
 -- shuffle two decks
 shuffle :: Deck -> Deck -> Deck
 shuffle [] [] = []
 shuffle (c1:d1) (c2:d2) = [c1,c2] ++ shuffle d1 d2
 
+-- Method to split the deck into equal two parts and shuffle it
 splitShuffle :: Deck -> Deck
 splitShuffle deck = shuffle deck1 deck2
                  where n = (length deck) `div` 2
                        deck1 = fst (splitAt n deck)
                        deck2 = snd (splitAt n deck)
 
-shuffleDeck :: Deck -> Deck
-shuffleDeck deck = do
-    -- n <- randomRIO(3,8) :: IO Int
-    d <- (iterate splitShuffle deck) !! (4)
-    return d
+-- shuffle the deck of cards
+shuffleDeck :: Deck -> IO Deck 
+shuffleDeck deck = 
+    do
+    n <- randomRIO(3,8) :: IO Int
+    return ((iterate splitShuffle deck) !! (fromIntegral n))
 
 dealCards :: Deck -> (Player, Player)
 dealCards deck = ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
 
---------------------------------------------------------------------------------------------------------
+{-
+roundWinner :: Player -> Player -> Roundwinner
+roundWinner player1 player2 
+    |isGreaterCard card1 card2-}
 
-winner :: Deck -> Deck -> Deck
-winner cardsA cardsB
-  | length cardsA == 0 = cardsB
-  | length cardsB == 0 = cardsA
 
-pop :: [a] -> [a]
-pop ((:) x xs) = xs
-
-insert :: a -> [a] -> [a]
-insert a list_a = list_a ++ [a]
-
-removeThreeAdd :: Deck -> Deck
-removeThreeAdd cards = [cards !! n | n <- [3..(length cards)]] ++ [cards !! n | n <- [0..3]]
-
-goToWar :: Deck -> Deck -> Deck
-goToWar cardsA cardsB
-  | (||) (length cardsA == 0) (length cardsB == 0) = winner cardsA cardsB
-  | (head cardsA) `isGreaterCard` (head cardsB) = goToWar (insert (head cardsA) cardsB) (pop cardsA)
-  | (head cardsA) `isSameCard` (head cardsB) = goToWar (removeThreeAdd cardsA) (removeThreeAdd cardsB)
