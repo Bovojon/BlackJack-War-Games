@@ -41,9 +41,9 @@ splitShuffle deck = shuffle deck1 deck2
 
 shuffleDeck :: Deck -> Deck
 shuffleDeck deck = do
-    -- n <- randomRIO(3,8) :: IO Int
-    d <- (iterate splitShuffle deck) !! (4)
-    return d
+   -- n <- randomRIO(3,8) :: IO Int
+   d <- (iterate splitShuffle deck) !! (4)
+   return d
 
 dealCards :: Deck -> (Player, Player)
 dealCards deck = ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
@@ -67,5 +67,36 @@ removeThreeAdd cards = [cards !! n | n <- [3..(length cards)]] ++ [cards !! n | 
 goToWar :: Deck -> Deck -> Deck
 goToWar cardsA cardsB
   | (||) (length cardsA == 0) (length cardsB == 0) = winner cardsA cardsB
-  | (head cardsA) `isGreaterCard` (head cardsB) = goToWar (insert (head cardsA) cardsB) (pop cardsA)
+  | (head cardsA) `isGreaterCard` (head cardsB) = goToWar (insert (head cardsB) cardsA) (pop cardsB)
   | (head cardsA) `isSameCard` (head cardsB) = goToWar (removeThreeAdd cardsA) (removeThreeAdd cardsB)
+
+-- roundWinner :: Player -> Player -> (Player, Player)
+roundWinner cardsA cardsB
+  | (head cardsA) `isGreaterCard` (head cardsB) =
+    do
+      putStr "PlayerA: "
+      print (head cardsA)
+      putStr "PlayerB: "
+      print (head cardsB)
+      putStrLn "PlayerA won the round"
+      return (((tail cardsA) ++ [(head cardsB)] ++ [(head cardsA)]), (tail cardsB))
+  | (head cardsB) `isGreaterCard` (head cardsA) =
+    do
+      putStr "PlayerA: "
+      print (head cardsA)
+      putStr "PlayerB: "
+      print (head cardsB)
+      putStrLn "PlayerB won the round"
+      return ((tail cardsA), ((tail cardsB) ++ [(head cardsA)] ++ [(head cardsB)]))
+
+  -- |(head cardsA) `isSameCard` (head cardsB) =
+
+
+-- autoWar :: IO ()
+-- autoWar =
+--   do
+--     let cards = shuffleDeck newDeck
+--     let players_tuple = dealCards cards
+--     let player1 = fst players_tuple
+--     let player2 = snd players_tuple
+--     roundWinner
