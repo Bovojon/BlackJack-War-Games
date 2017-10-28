@@ -54,8 +54,8 @@ shuffleDeck deck = do
    return d
 =======
 -- shuffle the deck of cards
-shuffleDeck :: Deck -> IO Deck 
-shuffleDeck deck = 
+shuffleDeck :: Deck -> IO Deck
+shuffleDeck deck =
     do
     n <- randomRIO(3,8) :: IO Int
     return ((iterate splitShuffle deck) !! (fromIntegral n))
@@ -66,7 +66,7 @@ dealCards deck = ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
 
 {-
 roundWinner :: Player -> Player -> Roundwinner
-roundWinner player1 player2 
+roundWinner player1 player2
     |isGreaterCard card1 card2-}
 
 
