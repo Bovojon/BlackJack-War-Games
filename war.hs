@@ -46,38 +46,21 @@ splitShuffle deck = shuffle deck1 deck2
                        deck1 = fst (splitAt n deck)
                        deck2 = snd (splitAt n deck)
 
-<<<<<<< HEAD
 shuffleDeck :: Deck -> Deck
 shuffleDeck deck = do
    -- n <- randomRIO(3,8) :: IO Int
    d <- (iterate splitShuffle deck) !! (4)
    return d
-=======
--- shuffle the deck of cards
-shuffleDeck :: Deck -> IO Deck 
-shuffleDeck deck = 
-    do
-    n <- randomRIO(3,8) :: IO Int
-    return ((iterate splitShuffle deck) !! (fromIntegral n))
->>>>>>> 49077a6f7ec593deb6d0f1d60a7b23027a7419d8
 
 dealCards :: Deck -> (Player, Player)
 dealCards deck = ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
 
-{-
-roundWinner :: Player -> Player -> Roundwinner
-roundWinner player1 player2 
-    |isGreaterCard card1 card2-}
-
-
-<<<<<<< HEAD
 goToWar :: Deck -> Deck -> Deck
 goToWar cardsA cardsB
   | (||) (length cardsA == 0) (length cardsB == 0) = winner cardsA cardsB
   | (head cardsA) `isGreaterCard` (head cardsB) = goToWar (insert (head cardsB) cardsA) (pop cardsB)
   | (head cardsA) `isSameCard` (head cardsB) = goToWar (removeThreeAdd cardsA) (removeThreeAdd cardsB)
 
--- roundWinner :: Player -> Player -> (Player, Player)
 roundWinner cardsA cardsB
   | (head cardsA) `isGreaterCard` (head cardsB) =
     do
@@ -107,5 +90,3 @@ roundWinner cardsA cardsB
 --     let player1 = fst players_tuple
 --     let player2 = snd players_tuple
 --     roundWinner
-=======
->>>>>>> 49077a6f7ec593deb6d0f1d60a7b23027a7419d8
