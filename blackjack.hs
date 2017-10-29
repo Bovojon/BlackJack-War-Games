@@ -1,4 +1,5 @@
 import System.Random
+import System.Exit (exitSuccess)
 
 data Number = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King | Ace deriving (Read, Enum, Eq, Show, Ord)
 data Suit = Clubs | Diamonds | Hearts | Spades deriving (Read, Enum, Eq, Show, Ord)
@@ -60,26 +61,54 @@ getDealerFirstCard dealer = dealer !! 0
 getDeck :: (Player, Player, Deck) -> Deck
 getDeck (_, _, deck) = deck
 
-doPlayerTurn :: (Player, Deck) -> (Player, Deck)
+doPlayerTurn :: (Player, Deck) -> IO (Player, Deck)
 doPlayerTurn (player, deck) = do
   putStr "\nWhat would you like to do? (h/s): "
   action <- getLine
-
+  
   if action == "h"
     then do
       -- In case of Hit
-      let currentPlayerAndDeck = hit (player, deck)
+      let (player', deck') = hit (player, deck)
       putStr "Your hand: "
-      print (fst currentPlayerAndDeck)
-
-      -- doPlayerTurn currentPlayerAndDeck
+      print player'
+      
+      if (scoreOver21 player')
+          then do 
+              putStr "You went over 21. You lose!\n"
+              exitSuccess
+          else do
+              output <- (doPlayerTurn (player', deck'))
+              return output
 
     else do
       putStrLn "\nYou chose to stand..."
-      -- return currentPlayerAndDeck
+      return (player, deck)
+      
 
 
+cardValue :: PlayingCards -> Int
+cardValue (Card Ace _) = 11
+cardValue (Card King _) = 10
+cardValue (Card Queen _) = 10
+cardValue (Card Jack _) = 10
+cardValue (Card Two _) = 2
+cardValue (Card Three _) = 3
+cardValue (Card Four _) = 4
+cardValue (Card Five _) = 5
+cardValue (Card Six _) = 6
+cardValue (Card Seven _) = 7
+cardValue (Card Eight _) = 8
+cardValue (Card Nine _) = 9
+cardValue (Card Ten _) = 10
 
+handScore :: Player -> Int
+handScore player = sum $ map cardValue player
+
+scoreOver21 :: Player -> Bool
+scoreOver21 player =
+  handScore player > 21
+  
 main :: IO ()
 main = do
   putStrLn "Welcome to BlackJack"
@@ -98,4 +127,17 @@ main = do
   putStr "Dealer's cards: "
   print (getDealerFirstCard(getDealerCards game_tuple), "Hidden Card")
 
-  doPlayerTurn (player, deck)
+  ------------------------------------------------------------------------------------
+  -- Player turn
+  ------------------------------------------------------------------------------------
+  (player', deck') <- doPlayerTurn (player, deck)
+  
+  ------------------------------------------------------------------------------------
+  -- Dealer turn
+  ------------------------------------------------------------------------------------
+  
+  
+  
+  putStr "End "
+  
+
