@@ -7,8 +7,6 @@ data Suit = Clubs | Diamonds | Hearts | Spades deriving (Read, Enum, Eq, Show, O
 
 data PlayingCards = Card Number Suit deriving (Read, Eq, Show, Ord)
 
-data Roundwinner = Player1 | Player2 | Tie
-
 -- function to show card
 showCard :: PlayingCards -> String
 showCard (Card n s) = show n ++ " -- " ++ show s
@@ -91,27 +89,40 @@ roundWinner cardsA cardsB
                   return ((skipThreeCards cardsA), (skipThreeCards cardsB))
       
      
---autowars :: (Player, Player) -> String
-autowars (player1, player2)
-    | (length player1) == 0 = putStrLn "Player 1 lost the game"
-    | (length player2) == 0 = putStrLn "Player 2 lost the game"
+autowars :: (Player, Player) -> IO ()
+autowars (playerA, playerB)
+    | (length playerA) == 0 = putStrLn "\n*** Player A lost the game ***\n"
+    | (length playerB) == 0 = putStrLn "\n*** Player B lost the game ***\n"
     | otherwise = do
-                    game <- roundWinner player1 player2
+                    game <- roundWinner playerA playerB
+                    putStr "Score Player A: "
+                    print (length playerA)
+                    
+                    putStr "Score Player B: "
+                    print (length playerB)
                     autowars game
 
 
---interactiveWar :: (Player, Player) -> String
-interactiveWar (player1, player2)
-    | (length player1) == 0 = putStrLn "Player 1 lost the game"
-    | (length player2) == 0 = putStrLn "Player 2 lost the game"
+interactiveWar :: (Player, Player) -> IO ()
+interactiveWar (playerA, playerB)
+    | (length playerA) == 0 = putStrLn "\n*** Player A lost the game ***\n"
+    | (length playerB) == 0 = putStrLn "\n*** Player B lost the game ***\n"
     | otherwise = do
-                    game <- roundWinner player1 player2
-                    putStrLn "Press enter for next round"
+                    game <- roundWinner playerA playerB
+                    putStr "Score Player A: "
+                    print (length playerA)
+                    
+                    putStr "Score Player B: "
+                    print (length playerB)
+                    
+                    putStrLn "Press enter for next round -> "
                     input <- getLine
+                    putStr ""
+                    
                     interactiveWar game          
 main :: IO ()
 main = do
-  putStrLn "Welcome to Wars"
+  putStrLn "\nWelcome to Wars Game"
   putStrLn "---------------------------"
   
   ------------------------------------------------------------------------------------
@@ -121,9 +132,14 @@ main = do
   game <- dealCards (shuffle newDeck)
   
   putStrLn "--------------------------------"
+  putStrLn "AutoWars"
+  putStrLn "--------------------------------\n"
   
   autowars game
-  
+  putStrLn "----------------------------------------------------------"
+  putStrLn "Interactive Game"
+  putStrLn "--------------------------------\n"
+  putStrLn "You are the PlayerA and the computer is the PlayerB."
   interactiveWar game
 
   putStrLn "\n************************"
