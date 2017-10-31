@@ -1,5 +1,6 @@
 import System.Random
 import System.Exit (exitSuccess)
+import Data.List
 
 data Number = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King | Ace deriving (Read, Enum, Eq, Show, Ord)
 data Suit = Clubs | Diamonds | Hearts | Spades deriving (Read, Enum, Eq, Show, Ord)
@@ -20,7 +21,19 @@ type Player = [PlayingCards]
 newDeck :: Deck
 newDeck = [Card x y|  y <- [Clubs .. Spades], x <- [Two .. Ace]]
 
+
 -- shuffle two decks
+shuffleDeck :: Deck -> IO Deck
+shuffleDeck deck = do
+    if length deck /= 0
+        then do 
+            let deckLen = (length deck) - 1
+            n <- randomRIO(0, deckLen) :: IO Int
+            let randomCard = deck !! (fromIntegral n)
+            tailShuffle <- shuffleDeck (delete randomCard deck)
+            return ([randomCard] ++ tailShuffle)
+        else return deck
+{-        
 shuffle :: Deck -> Deck -> Deck
 shuffle [] [] = []
 shuffle (c1:d1) (c2:d2) = [c1,c2] ++ shuffle d1 d2
@@ -36,7 +49,7 @@ shuffleDeck :: Deck -> IO Deck
 shuffleDeck deck = do
     do
     n <- randomRIO(3,8) :: IO Int
-    return ((iterate splitShuffle deck) !! (fromIntegral n))
+    return ((iterate splitShuffle deck) !! (fromIntegral n))-}
 
 -------------------------------------------------------------------------------
 
@@ -75,6 +88,11 @@ doPlayerTurn (player, deck) = do
       let (player', deck') = hit (player, deck)
       putStr "Your hand: "
       print player'
+      
+      putStr "Your Score: "
+      if (dealerOver21 player')
+          then print (lowScore player')
+          else print (highScore player')
       
       if (scoreOver21 player')
           then do 
@@ -174,9 +192,9 @@ declareWinner player dealer = do
     print (highScore player)
     
     
-    putStr "\nDealer cards: "
+    putStr "\nDealer's cards: "
     print dealer
-    putStr "Your score: "
+    putStr "Dealer's score: "
     print (highScore dealer)
     
     putStrLn "\n**************************"
@@ -241,10 +259,14 @@ main = do
   let player = getPlayerCards game_tuple
   let deck = getDeck game_tuple
   print (player)
+  putStr "Your score: "
+  print (highScore player)
 
   putStr "Dealer's cards: "
   let dealer = getDealerCards game_tuple
   print (getDealerFirstCard(dealer), "Hidden Card")
+  putStr "Dealer's score is greater than: "
+  print (cardValue2 (dealer!!0))
   
   if (blackJack player)
       then do
