@@ -32,16 +32,19 @@ splitShuffle deck = shuffle deck1 deck2
                        deck1 = fst (splitAt n deck)
                        deck2 = snd (splitAt n deck)
 
-shuffleDeck :: Deck -> Deck
+shuffleDeck :: Deck -> IO Deck
 shuffleDeck deck = do
-   -- n <- randomRIO(3,8) :: IO Int
-   d <- (iterate splitShuffle deck) !! (3)
-   return d
+    do
+    n <- randomRIO(3,8) :: IO Int
+    return ((iterate splitShuffle deck) !! (fromIntegral n))
 
 -------------------------------------------------------------------------------
 
-dealTwoCards :: Deck -> (Player, Player, Deck)
-dealTwoCards deck = (take 2 deck, take 2 (drop 2 deck), drop 4 deck)
+dealTwoCards :: Monad m => m Deck -> m (Player, Player, Deck)
+dealTwoCards d = 
+    do
+    deck <- d
+    return (take 2 deck, take 2 (drop 2 deck), drop 4 deck)
 
 dealOneCard :: Player -> Deck -> (Player, Deck)
 dealOneCard player deck = (take 1 deck, drop 1 deck)
@@ -82,11 +85,16 @@ doPlayerTurn (player, deck) = do
               gameStatus <- (doPlayerTurn (player', deck'))
               return gameStatus
 
-    else do
-      putStrLn "\n--------------------------------"
-      putStrLn "You chose to stand..."
-      putStrLn "--------------------------------"
-      return (player, deck)
+    else if action == "s"
+      then  do
+          putStrLn "\n--------------------------------"
+          putStrLn "You chose to stand..."
+          putStrLn "--------------------------------"
+          return (player, deck)
+      else do
+          putStrLn "*** Invalid Move. Press either h or s. (hit/stand)"
+          gameStatus <- (doPlayerTurn (player, deck))
+          return gameStatus
       
 doDealerTurn :: (Player, Deck) -> IO (Player, Deck)
 doDealerTurn (dealer, deck) = do
@@ -148,7 +156,7 @@ lowScore :: Player -> Int
 lowScore player = sum $ map cardValue player
 
 highScore :: Player -> Int
-highScore player = sum $ map cardValue player
+highScore player = sum $ map cardValue2 player
 
 scoreOver21 :: Player -> Bool
 scoreOver21 player =
@@ -209,8 +217,8 @@ doTurns (player, dealer, deck) = do
   
   declareWinner player' dealer'
   
-  putStrLn "\n************************"
-  putStrLn "End of Game \n"
+blackJack :: Player -> Bool
+blackJack player = (highScore player) == 21
 
 main :: IO ()
 main = do
@@ -222,18 +230,28 @@ main = do
   ------------------------------------------------------------------------------------
   putStrLn "\nShuffling cards..."
   let deck = shuffleDeck newDeck
-
+  
   putStrLn "\nDealing cards...\n"
-  let game_tuple = dealTwoCards deck
-
+  let gameTuple = dealTwoCards deck
+  
+  game_tuple <- gameTuple
+  putStrLn "--------------------------------"
+  
   putStr "Your cards: "
   let player = getPlayerCards game_tuple
   let deck = getDeck game_tuple
   print (player)
 
   putStr "Dealer's cards: "
-  putStrLn "\n--------------------------------"
   let dealer = getDealerCards game_tuple
   print (getDealerFirstCard(dealer), "Hidden Card")
   
-  doTurns (player, dealer, deck)
+  if (blackJack player)
+      then do
+          putStrLn "\n**************************"
+          if (blackJack dealer)
+          then putStrLn "Both player have BlackJack. The game is a tie."
+          else putStrLn "BlackJack! You won the game."
+      else doTurns (player, dealer, deck)
+  putStrLn "\n************************"
+  putStrLn "End of Game \n"
