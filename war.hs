@@ -1,4 +1,6 @@
 import System.Random
+import System.Exit (exitSuccess)
+import Data.List
 
 data Number = Two | Three | Four | Five | Six | Seven | Eight | Nine | Ten | Jack | Queen | King | Ace deriving (Read, Enum, Eq, Show, Ord)
 data Suit = Clubs | Diamonds | Hearts | Spades deriving (Read, Enum, Eq, Show, Ord)
@@ -34,59 +36,95 @@ type Player = [PlayingCards]
 newDeck :: Deck
 newDeck = [Card x y|  y <- [Clubs .. Spades], x <- [Two .. Ace]]
 
--- shuffle two decks
-shuffle :: Deck -> Deck -> Deck
-shuffle [] [] = []
-shuffle (c1:d1) (c2:d2) = [c1,c2] ++ shuffle d1 d2
+shuffle :: Deck -> IO Deck
+shuffle deck = do
+    if length deck /= 0
+        then do 
+            let deckLen = (length deck) - 1
+            n <- randomRIO(0, deckLen) :: IO Int
+            let randomCard = deck !! (fromIntegral n)
+            tailShuffle <- shuffle (delete randomCard deck)
+            return ([randomCard] ++ tailShuffle)
+        else return deck
 
--- Method to split the deck into equal two parts and shuffle it
-splitShuffle :: Deck -> Deck
-splitShuffle deck = shuffle deck1 deck2
-                 where n = (length deck) `div` 2
-                       deck1 = fst (splitAt n deck)
-                       deck2 = snd (splitAt n deck)
+dealCards :: Monad m => m Deck -> m (Player, Player)
+dealCards d = 
+    do
+    deck <- d
+    return ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
 
-shuffleDeck :: Deck -> Deck
-shuffleDeck deck = do
-   -- n <- randomRIO(3,8) :: IO Int
-   d <- (iterate splitShuffle deck) !! (4)
-   return d
+skipThreeCards :: Player -> Player
+skipThreeCards cards = (drop 4 cards) ++ (take 4 cards)
 
-dealCards :: Deck -> (Player, Player)
-dealCards deck = ([deck !! n | n <- [0,2 ..51]], [deck !! n | n <- [1,3 ..51]])
-
-goToWar :: Deck -> Deck -> Deck
-goToWar cardsA cardsB
-  | (||) (length cardsA == 0) (length cardsB == 0) = winner cardsA cardsB
-  | (head cardsA) `isGreaterCard` (head cardsB) = goToWar (insert (head cardsB) cardsA) (pop cardsB)
-  | (head cardsA) `isSameCard` (head cardsB) = goToWar (removeThreeAdd cardsA) (removeThreeAdd cardsB)
-
+roundWinner :: Player -> Player -> IO (Player, Player)
 roundWinner cardsA cardsB
   | (head cardsA) `isGreaterCard` (head cardsB) =
     do
-      putStr "PlayerA: "
+      putStr "\nPlayerA: "
       print (head cardsA)
       putStr "PlayerB: "
       print (head cardsB)
-      putStrLn "PlayerA won the round"
+      putStrLn "-> PlayerA won the round!\n"
       return (((tail cardsA) ++ [(head cardsB)] ++ [(head cardsA)]), (tail cardsB))
   | (head cardsB) `isGreaterCard` (head cardsA) =
     do
-      putStr "PlayerA: "
+      putStr "\nPlayerA: "
       print (head cardsA)
       putStr "PlayerB: "
       print (head cardsB)
-      putStrLn "PlayerB won the round"
+      putStrLn "-> PlayerB won the round!\n"
       return ((tail cardsA), ((tail cardsB) ++ [(head cardsA)] ++ [(head cardsB)]))
+  
+  | (head cardsA) `isSameCard` (head cardsB) =
+    do
+      if  length cardsA < 4
+          then do 
+              putStrLn "You do no have enough cards to continue. You lose!"
+              exitSuccess
+          
+          else if length cardsB < 4
+              then do 
+                  putStrLn "You win!"
+                  exitSuccess
+              else do 
+                  putStrLn "Both of you have same the same card. Go for another round."
+                  return ((skipThreeCards cardsA), (skipThreeCards cardsB))
+      
+     
+--autowars :: (Player, Player) -> String
+autowars (player1, player2)
+    | (length player1) == 0 = putStrLn "Player 1 lost the game"
+    | (length player2) == 0 = putStrLn "Player 2 lost the game"
+    | otherwise = do
+                    game <- roundWinner player1 player2
+                    autowars game
 
-  -- |(head cardsA) `isSameCard` (head cardsB) =
 
+--interactiveWar :: (Player, Player) -> String
+interactiveWar (player1, player2)
+    | (length player1) == 0 = putStrLn "Player 1 lost the game"
+    | (length player2) == 0 = putStrLn "Player 2 lost the game"
+    | otherwise = do
+                    game <- roundWinner player1 player2
+                    putStrLn "Press enter for next round"
+                    input <- getLine
+                    interactiveWar game          
+main :: IO ()
+main = do
+  putStrLn "Welcome to Wars"
+  putStrLn "---------------------------"
+  
+  ------------------------------------------------------------------------------------
+  -- Shuffle, deal and show Cards
+  ------------------------------------------------------------------------------------
+  putStrLn "\nShuffling and Dealing cards..."
+  game <- dealCards (shuffle newDeck)
+  
+  putStrLn "--------------------------------"
+  
+  autowars game
+  
+  interactiveWar game
 
--- autoWar :: IO ()
--- autoWar =
---   do
---     let cards = shuffleDeck newDeck
---     let players_tuple = dealCards cards
---     let player1 = fst players_tuple
---     let player2 = snd players_tuple
---     roundWinner
+  putStrLn "\n************************"
+  putStrLn "End of Game \n"
