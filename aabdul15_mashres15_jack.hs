@@ -277,3 +277,8 @@ main = do
       else doTurns (player, dealer, deck)
   putStrLn "\n************************"
   putStrLn "End of Game \n"
+  
+
+  
+  
+
