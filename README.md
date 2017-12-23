@@ -27,7 +27,7 @@ Haskell is functional which meant that we could not change the list containing t
 ## War
 We can use the same idea as BlackJack to build the deck using our code for Lab exercise 5 – we made a data type Number and a data type Suit. We then created an Algebraic data type PlayingCards that is composed of a Card that has a Number and Suit. The type Deck is a list of PlayingCards.
 Again, we used System.Random to generate random numbers. We took the same approach and started out thinking how to break the problem down and about the functions we might need:
-```
+```haskell
 showCard :: PlayingCards -> String
 isSameCard :: PlayingCards -> PlayingCards -> Bool
 isGreaterCard :: PlayingCards -> PlayingCards -> Bool
